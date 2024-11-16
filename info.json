@@ -1,0 +1,9 @@
+{
+  "name": "global-recipes-multiplier",
+  "version": "0.1.0",
+  "title": "Global Recipes Multiplier",
+  "author": "Teylife",
+  "factorio_version": "2.0",
+  "dependencies": ["base >= 2.0","? pypostprocessing"],
+  "description": "A mod that allows you to multiply the amount of results and the energy consumed by assembly machine."
+}
