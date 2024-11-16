@@ -87,7 +87,7 @@ Multiplies the amount of energy needed on an assembly machine,
 only if this option is enabled.
 ]] --
 ---------------------------------------------------------------------------
-if mult_energy == 1 then
+if mult_energy ~= 1 then
     for k, v in pairs(data.raw["assembling-machine"]) do
         if v then
             -- Separate letters and numbers within the energy use
