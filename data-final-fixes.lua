@@ -3,8 +3,12 @@ local mult = settings.startup["global-multiplier-mult"].value
 local multiply_time = settings.startup["global-multiplier-affects-time"].value
 local ignore_barrels = settings.startup["global-multiplier-ignores-barrels"].value
 local mult_energy = settings.startup["global-multiplier-mult-energy"].value
-local allitems = data.raw["item"]
-local allfluids = data.raw["fluid"]
+local all_items = data.raw["item"]
+local all_fluids = data.raw["fluid"]
+local afeccts_categories = { "assembling-machine", "furnace", "lab", "agricultural-tower",
+    "mining-drill", "radar" }
+
+
 
 local function round(x)
     if mode == "roundup" then
@@ -88,17 +92,21 @@ only if this option is enabled.
 ]] --
 ---------------------------------------------------------------------------
 if mult_energy ~= 1 then
-    for k, v in pairs(data.raw["assembling-machine"]) do
-        if v then
-            -- Separate letters and numbers within the energy use
-            local num = tonumber(v.energy_usage:match("%d+"))
-            local unidad = v.energy_usage:match("%a+")
-            if (round(num * mult_energy)) > 0 then
-                -- Multiplies the amount of energy used and reassigns it to the entity
-                v.energy_usage = (round(num * mult_energy)) .. unidad
-                log("Warning Energy usage in" .. v.name .. " now is " .. v.energy_usage)
-            else
-                log("Warning " .. v.name .. " not affects Energy changes")
+    for _, category in pairs(afeccts_categories) do
+        if data.raw[category] then
+            for _, v in pairs(data.raw[category]) do
+                if v and v.energy_source and v.energy_source.type == "electric" then
+                    -- Separate letters and numbers within the energy use
+                    local num = tonumber(v.energy_usage:match("%d+"))
+                    local unidad = v.energy_usage:match("%a+")
+                    if (round(num * mult_energy)) > 0 then
+                        -- Multiplies the amount of energy used and reassigns it to the entity
+                        v.energy_usage = (round(num * mult_energy)) .. unidad
+                        log("Warning Energy usage in" .. v.name .. " now is " .. v.energy_usage)
+                    else
+                        log("Warning " .. v.name .. " not affects Energy changes")
+                    end
+                end
             end
         end
     end
@@ -107,12 +115,11 @@ else
 end
 
 -- For all recipes multiply the products
-for k, v in pairs(data.raw.recipe) do
-
+for _, v in pairs(data.raw.recipe) do
     -- Multiply the manufacturing time of a recipe
     if multiply_time and v.energy_required then
         v.energy_required = v.energy_required * mult
-    --If a recipe does not have a manufacturing time, assign one
+        --If a recipe does not have a manufacturing time, assign one
     elseif multiply_time and not v.energy_required then
         v.energy_required = 0.5 * mult
     end
@@ -120,16 +127,16 @@ for k, v in pairs(data.raw.recipe) do
     if ignore_barrels and v.name:match("%-barrel$") then
         return
     end
-    
+
     if v.results then
         for _, results in ipairs(v.results) do
             if results.type == "item" then
-                local item = allitems[results.name]
+                local item = all_items[results.name]
                 if item and flagscheck(item.flags) then
                     results.amount = amoutcheck(results.amount, results.amount_max, results.amount_min, item, v.name)
                 end
             elseif results.type == "fluid" then
-                local fluid = allfluids[results.name]
+                local fluid = all_fluids[results.name]
                 if fluid then
                     results.amount = amoutcheck(results.amount, results.amount_max, results.amount_min, fluid, v.name)
                 end
